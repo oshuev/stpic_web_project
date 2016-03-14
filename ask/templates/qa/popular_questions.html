@@ -1,0 +1,23 @@
+{% extends "qa/base_layout.html" %}
+
+{% block title %}
+    {{ block.super }} - popular questions
+{% endblock %}
+
+{% block content %}
+{% for question in questions %}
+    <h1>{{ question.title }}<h1>
+    <a href="{{ question.get_url }}">{{ question }}</a>
+    <hr>
+{% endfor %}
+
+<nav>
+    {% for p in paginator.page_range %}
+        {% if p == page.number %}
+            <b>{{ p }}</b> | 
+        {% else %}
+            <a href="{{ paginator.baseurl }}{{ p }}">{{ p }}</a> | 
+        {% endif %}
+    {% endfor %}
+</nav>
+{% endblock %}

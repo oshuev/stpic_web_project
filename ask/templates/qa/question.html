@@ -1,0 +1,22 @@
+{% extends "qa/base_layout.html" %}
+
+{% block title %}
+    {{ block.super }} - question 
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="/answer/">
+{% csrf_token %}
+{# {{ form.as_ul }} #}
+</form>
+<hr>
+<h1>{{ question.title }}</h1>
+<p>{{ question.text }}</p>
+<hr>
+{% for answer in answers %}
+    <h1>{{ answer.author }}</h1>    
+    <h1>{{ answer.added_at }}</h1>
+    <p>{{ answer.text }}</p>
+    <hr>
+{% endfor %}
+{% endblock %}
