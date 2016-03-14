@@ -17,8 +17,8 @@ class Question(models.Model):
         return reverse('question', 
             kwargs={'slug': self.id})
         
-    class Meta:
-        db_table = 'qa_question'
+    # class Meta:
+        # db_table = 'qa_question'
 
 
 class Answer(models.Model):
@@ -27,5 +27,5 @@ class Answer(models.Model):
     question = models.ForeignKey(Question)
     author = models.ForeignKey(User, related_name='answer_author')
 
-    class Meta:
-        db_table = 'qa_answer'
+    # class Meta:
+        # db_table = 'qa_answer'
