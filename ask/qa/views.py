@@ -46,7 +46,6 @@ def popular_questions(request):
         'page': page,
     })
 
-@require_GET
 def question(request, slug):
     slug=int(slug)
     question = get_object_or_404(Question, id=slug)
