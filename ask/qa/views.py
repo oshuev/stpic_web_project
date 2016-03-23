@@ -7,9 +7,11 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponseNotModified
 from django.views.decorators.http import require_GET, require_POST
 from django.core.urlresolvers import reverse
+from django.contrib.auth import authenticate, login
 from models import Answer
 from models import Question
 from forms import *
+
 
 def _pagination(request, qs):
     limit = request.GET.get('limit', 10);
@@ -26,6 +28,7 @@ def _pagination(request, qs):
 def test(request, *args, **kwargs):
     return HttpResponse('OK')
 
+
 def main(request):
     questions = Question.objects.all()
     questions = questions.order_by('-id')
@@ -35,6 +38,7 @@ def main(request):
         'paginator': page.paginator,
         'page': page,
     })
+
 
 def popular_questions(request):
     questions = Question.objects.all()
@@ -46,21 +50,27 @@ def popular_questions(request):
         'page': page,
     })
 
+
 def question(request, slug):
     slug=int(slug)
     question = get_object_or_404(Question, id=slug)
     answers = question.answer_set.all()
-    form = AnswerForm(initial={'question': str(slug)})
+    form = AnswerForm(request.user, initial={'question': str(slug)})
     return render(request, 'qa/question.html', {
             'question': question,
             'answers': answers,
             'form': form,
         })
 
+
 def question_add(request):
     if request.method == "POST":
-        form = AskForm(request.POST)
+        user = request.user
+        if not user.is_authenticated():
+            return HttpResponseRedirect('/login/')
+        form = AskForm(request.user, request.POST)
         if form.is_valid():
+            # form._user = user
             question = form.save()
             url = question.get_url()
             return HttpResponseRedirect(url)
@@ -70,11 +80,52 @@ def question_add(request):
         'form': form,
         })
 
+
 @require_POST
 def answer(request):
-    form = AnswerForm(request.POST)
+    user = request.user
+    if not user.is_authenticated():
+        return HttpResponseRedirect('/login/')
+    form = AnswerForm(request.user, request.POST)
+    # form._user = user
     if form.is_valid():
-        answer = form.save()
-        return HttpResponseRedirect(reverse('question', args=[answer.question.id]))
+        post = form.save()
+        # url = answer.question.get_url()
+        # return HttpResponseRedirect(url)
+        return HttpResponseRedirect(reverse('question', args=[post.question.id]))
     else:
         return HttpResponseNotModified()
+
+
+def signup_user(request):
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            return HttpResponseRedirect('/')
+    else:
+        form = SignupForm()
+    return render(request, 'qa/signup.html', {
+        'form': form,
+        })
+
+
+def login_user(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return HttpResponseRedirect('/')
+    else:
+        form = LoginForm()
+    return render(request, 'qa/login.html', {
+        'form': form,
+        })
